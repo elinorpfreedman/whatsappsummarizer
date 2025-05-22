@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  llm_service:
+    build:
+      context: ./llm_service
+    ports:
+      - "8001:8001"
+    environment:
+      OPENROUTER_API_KEY: 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
+    restart: unless-stopped
+
