@@ -1,15 +1,31 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse
+# whatsapp_service/main.py
+from fastapi import APIRouter, Request, status
+from fastapi.responses import JSONResponse
+import os
+from twilio.rest import Client
+import requests
 
-app = FastAPI()
+router = APIRouter()
 
-@app.post("/whatsapp-webhook")
-async def whatsapp_webhook(request: Request):
-    form = await request.form()
-    from_number = form.get("From")
-    message_body = form.get("Body")
+@router.post("/twilio/webhook")
 
-    print(f"Received message from {from_number}: {message_body}")
+async def receive_message(request: Request):
+    form_data = await request.form()
+    whatsapp_message = form_data.get("Body")
+    sender = form_data.get("From")
 
-    # Echo response for now
-    return PlainTextResponse("Message received!")
+    # Call the LLM microservice
+    response = requests.post(
+        "http://llm_service:8000/summarize",
+        json={"text": whatsapp_message}
+    )
+    summary = response.json().get("summary", "Sorry, I couldn't summarize that.")
+
+    client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
+    client.messages.create(
+        body=f"Summary:\n{summary}",
+        from_=os.getenv("TWILIO_PHONE_NUMBER"),
+        to=sender,
+    )
+
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Summary sent."})
