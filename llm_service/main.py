@@ -26,9 +26,10 @@ def call_openrouter(messages):
     return res.json()["choices"][0]["message"]["content"]
 
 @app.post("/summarize")
+
 def summarize(request: TextRequest):
     try:
-        # Break long input into ~1500 character chunks to fit model limits
+        #breaking the long texts into chunks to summarize each section
         chunks = textwrap.wrap(request.text, width=1500, break_long_words=False, replace_whitespace=False)
 
         summaries = []
@@ -39,11 +40,9 @@ def summarize(request: TextRequest):
             ]
             summaries.append(call_openrouter(msg))
 
-        # If only one chunk, return its summary directly
         if len(summaries) == 1:
             return {"summary": summaries[0]}
 
-        # Otherwise, summarize the collected summaries
         combined_summary_text = "\n\n".join(summaries)
         final_msg = [
             {"role": "system", "content": "Summarize these points into a clear, concise summary of the original full text."},

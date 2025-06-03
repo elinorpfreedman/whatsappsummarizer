@@ -6,7 +6,6 @@ import requests
 from typing import List, Dict
 from datetime import datetime
 
-# In-memory message store: {sender: [ {body, timestamp, read}, ... ]}
 MESSAGE_STORE: Dict[str, List[Dict]] = {}
 
 router = APIRouter()
@@ -31,10 +30,9 @@ async def receive_message(request: Request):
     whatsapp_message = form_data.get("Body")
     sender = form_data.get("From")
 
-    # Store every incoming message
     store_message(sender, whatsapp_message)
 
-    # Command parsing
+
     if whatsapp_message.strip().lower() == "summarize unread":
         unread_messages = get_unread_messages(sender)
         if not unread_messages:
@@ -43,7 +41,7 @@ async def receive_message(request: Request):
             text = "\n".join([msg["body"] for msg in unread_messages])
             try:
                 response = requests.post(
-                    "http://llm_service:8001/summarize",  # Correct port
+                    "http://llm_service:8001/summarize", 
                     json={"text": text},
                     timeout=20
                 )
@@ -53,7 +51,7 @@ async def receive_message(request: Request):
             except Exception as e:
                 summary = f"Error summarizing: {str(e)}"
     else:
-        # Default: summarize the incoming message only
+
         try:
             response = requests.post(
                 "http://llm_service:8001/summarize",
@@ -64,8 +62,6 @@ async def receive_message(request: Request):
             summary = response.json().get("summary", "Sorry, I couldn't summarize that.")
         except Exception as e:
             summary = f"Error summarizing: {str(e)}"
-
-    # Send summary back to user via Twilio
     try:
         client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
         client.messages.create(
