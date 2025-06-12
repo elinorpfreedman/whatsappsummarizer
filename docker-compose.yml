@@ -1,20 +1,18 @@
 version: '3.8'
-
 services:
   whatsapp_service:
-    build:
-      context: ./whatsapp_service
-    container_name: whatsapp_service
+    build: ./whatsapp_service
     ports:
       - "8000:8000"
+    env_file:
+    - .env
     depends_on:
       - llm_service
-    env_file:
-      - .env
- 
 
   llm_service:
     build: ./llm_service
-    container_name: llm_service
     ports:
       - "8001:8001"
+    env_file:
+      - .env
+

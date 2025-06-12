@@ -48,6 +48,7 @@ def summarize(request: TextRequest):
             {"role": "system", "content": "Summarize these points into a clear, concise summary of the original full text."},
             {"role": "user", "content": combined_summary_text}
         ]
+        
         final_summary = call_openrouter(final_msg)
         return {"summary": final_summary}
 
