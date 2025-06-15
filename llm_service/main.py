@@ -3,8 +3,10 @@ from pydantic import BaseModel
 import requests
 import os
 import textwrap
+import logging
 
 app = FastAPI()
+logging.basicConfig(level=logging.INFO)
 
 class TextRequest(BaseModel):
     text: str
@@ -27,7 +29,9 @@ def call_openrouter(messages):
 
 @app.post("/summarize")
 
-def summarize(request: TextRequest):
+async def summarize_text(request: TextRequest):
+
+    logging.info(f"📨 Received text to summarize: {request.text}")
     try:
         #breaking the long texts into chunks to summarize each section
         chunks = textwrap.wrap(request.text, width=1500, break_long_words=False, replace_whitespace=False)
@@ -57,3 +61,9 @@ def summarize(request: TextRequest):
 
     except Exception as e:
         return {"error": f"Unexpected error: {str(e)}"}
+    
+    except Exception as e:
+
+        logging.error(f"❌ Error during summarization: {str(e)}")
+
+        return {"summary": "Sorry, there was a problem summarizing your message."}

@@ -8,6 +8,7 @@ router = APIRouter()
 VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN")
 ACCESS_TOKEN = os.getenv("WHATSAPP_TOKEN")
 PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+LLM_SERVICE_URL = os.getenv("LLM_SERVICE_URL", "http://llm_service:8001/summarize")
 
 
 @router.get("/webhook")
@@ -40,14 +41,49 @@ async def receive_whatsapp_message(request: Request):
 
             print(f"📩 Message from {sender}: {text}")
 
-            # Send back reply
-            reply = f"You said: {text}"
-            await send_whatsapp_message(sender, reply)
+          # 🧠 Call LLM service
+
+            summary = await call_llm_service(text)
+
+
+
+            print(f"🧠 Summary: {summary}")
+
+
+
+            # 📤 Send summary back
+
+            await send_whatsapp_message(sender, summary)
 
     except Exception as e:
         print("⚠️ Error processing message:", e)
 
     return {"status": "received"}
+
+
+async def call_llm_service(text: str) -> str:
+
+    try:
+
+        async with httpx.AsyncClient() as client:
+
+            response = await client.post(
+
+                LLM_SERVICE_URL,
+
+                json={"text": text}
+
+            )
+
+            response.raise_for_status()
+
+            return response.json().get("summary", "Could not .")
+
+    except Exception as e:
+
+        print(f"❌ Error calling LLM service: {e}")
+
+        return "Sorry, there was a problem summarizing your message."
 
 
 async def send_whatsapp_message(recipient_id: str, message: str):
