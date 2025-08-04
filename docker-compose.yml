@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   whatsapp_service:
     build: ./whatsapp_service
@@ -15,3 +14,25 @@ services:
       - "8001:8001"
     env_file:
       - .env
+
+  message_storage_service:
+    build:
+      context: ./message_storage_service
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./message_storage_service:/app
+    env_file:
+      - .env
+  whatsapp_scraper_service:
+    build: ./whatsapp_scraper_service
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true     # needed for `input()`
+    tty: true            # needed for `input()`
+    depends_on:
+      - message_storage_service
+    ports:
+      - "5900:5900"  # For VNC viewing

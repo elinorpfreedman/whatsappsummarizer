@@ -26,7 +26,7 @@ async def verify_webhook(request: Request):
 @router.post("/webhook")
 async def receive_whatsapp_message(request: Request):
     body = await request.json()
-    print("🔔 Incoming webhook:", body)
+    print("Incoming webhook:", body)
 
     try:
         entry = body["entry"][0]
@@ -39,15 +39,15 @@ async def receive_whatsapp_message(request: Request):
             sender = msg["from"]
             text = msg["text"]["body"]
 
-            print(f"📩 Message from {sender}: {text}")
+            print(f"Message from {sender}: {text}")
 
-          # 🧠 Call LLM service
+          # Call LLM service
 
             summary = await call_llm_service(text)
 
 
 
-            print(f"🧠 Summary: {summary}")
+            print(f"Summary: {summary}")
 
 
 
@@ -56,7 +56,7 @@ async def receive_whatsapp_message(request: Request):
             await send_whatsapp_message(sender, summary)
 
     except Exception as e:
-        print("⚠️ Error processing message:", e)
+        print("Error processing message:", e)
 
     return {"status": "received"}
 
@@ -81,7 +81,7 @@ async def call_llm_service(text: str) -> str:
 
     except Exception as e:
 
-        print(f"❌ Error calling LLM service: {e}")
+        print(f"Error calling LLM service: {e}")
 
         return "Sorry, there was a problem summarizing your message."
 
@@ -101,5 +101,5 @@ async def send_whatsapp_message(recipient_id: str, message: str):
 
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers=headers, json=payload)
-        print("📤 Reply status:", response.status_code)
-        print("📤 Reply response:", response.text)
+        print("Reply status:", response.status_code)
+        print("Reply response:", response.text)
